@@ -1,15 +1,26 @@
+
 <template>
-    <v-card text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi, ratione debitis quis est labore voluptatibus! Eaque cupiditate minima, at placeat totam, magni doloremque veniam neque porro libero rerum unde voluptatem!" variant="tonal"></v-card>    
+  <v-row>
+    <v-col class="pa-0">
+      <DashboardPie />
+    </v-col>
+    <v-col class="pa-0">
+      <DashboardDetails />
+    </v-col>
+  </v-row>
 </template>
   
-<script setup>
-import { ref } from 'vue'
+<script lang="ts">
+import { defineComponent, ref } from 'vue'
 
-const drawer = ref(null)
+
+export default defineComponent({
+  setup () {
+    const sectionIndex = ref(0);
+  },
+})
 </script>
 
-<script>
-export default {
-    data: () => ({ drawer: null }),
-}
-</script>
+<style scoped>
+
+</style>

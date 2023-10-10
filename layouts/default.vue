@@ -33,6 +33,7 @@ import { ref } from 'vue'
 import { useTheme } from 'vuetify'
 
 const drawer = ref(null)
+const themeVal  = ref(null)
 
 const theme = useTheme()
 
@@ -43,6 +44,6 @@ function toggleTheme () {
 
 <script>
 export default {
-  data: () => ({ drawer: null }),
+  data: () => ({ drawer: null, themeVal: null }),
 }
 </script>
