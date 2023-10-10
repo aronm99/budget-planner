@@ -133,6 +133,15 @@ export const multiColorLight = [
   indigo[2],
   violet[2]
 ];
+export const multiColorDark = [
+  red[9],
+  orange[9],
+  yellow[9],
+  green[9],
+  blue[9],
+  indigo[9],
+  violet[9]
+];
 
 export default {
   red,
@@ -143,5 +152,6 @@ export default {
   indigo,
   violet,
   multiColor,
-  multiColorLight
+  multiColorLight,
+  multiColorDark,
 }

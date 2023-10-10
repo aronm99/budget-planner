@@ -36,10 +36,8 @@
       const sectionTitle = ref(router.currentRoute.value.query.section ? router.currentRoute.value.query.section as string : categories[0]);
       const sectionIndex = ref(categories.findIndex((category) => category === sectionTitle.value));
       const color = ref(colors.multiColor[sectionIndex.value]);
-
       
       watch(() => router.currentRoute.value.query.section, (val) => {
-        console.log('watch', val);
         sectionTitle.value = val ? val as string : categories[0];
         sectionIndex.value = categories.findIndex((category) => category === sectionTitle.value);
         color.value = colors.multiColor[sectionIndex.value];
