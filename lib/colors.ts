@@ -8,7 +8,10 @@ export const primary = [
   '#67a6af',
   '#55919a',
   '#488189',
-  '#357079'
+  '#357079',
+  '#254F55',
+  '#193439',
+  '#0C1A1C',
 ];
 
 export const secondary = [
@@ -21,7 +24,10 @@ export const secondary = [
   '#738f94',
   '#5f7d81',
   '#516f73',
-  '#3d6165'
+  '#3d6165',
+  '#2E494D',
+  '#1F3133',
+  '#0F181A',
 ];
 
 export const red = [
@@ -34,7 +40,10 @@ export const red = [
   '#df2c29',
   '#c6201d',
   '#b11919',
-  '#9b0d12'
+  '#9b0d12',
+  '#71090D',
+  '#4B0608',
+  '#260304',
 ];
 
 export const orange = [
@@ -47,7 +56,10 @@ export const orange = [
   '#f28a16',
   '#d77708',
   '#c06802',
-  '#a75900'
+  '#a75900',
+  '#7A4100',
+  '#522C00',
+  '#291600',
 ];
 
 export const yellow = [
@@ -60,7 +72,10 @@ export const yellow = [
   '#fcbb05',
   '#e2a500',
   '#c89200',
-  '#ae7d00'
+  '#ae7d00',
+  '#7A5800',
+  '#523A00',
+  '#291D00',
 ];
 
 export const green = [
@@ -73,7 +88,10 @@ export const green = [
   '#56b07d',
   '#469a6b',
   '#3a8a5e',
-  '#2a784e'
+  '#2a784e',
+  '#205B3B',
+  '#153C27',
+  '#0B1E14',
 ];
 
 export const blue = [
@@ -86,7 +104,10 @@ export const blue = [
   '#4260c7',
   '#3550b0',
   '#2d479e',
-  '#223d8c'
+  '#223d8c',
+  '#182B63',
+  '#101C42',
+  '#080E21',
 ];
 
 export const indigo = [
@@ -99,7 +120,10 @@ export const indigo = [
   '#5474b4',
   '#44639f',
   '#39588f',
-  '#2d4b81'
+  '#2d4b81',
+  '#20345B',
+  '#15233C',
+  '#0B111E',
 ];
 
 export const violet = [
@@ -112,7 +136,10 @@ export const violet = [
   '#6535d1',
   '#5529b9',
   '#4b23a6',
-  '#401c93'
+  '#401c93',
+  '#2D1467',
+  '#1E0D45',
+  '#0F0722',
 ];
 
 export const multiColor = [
@@ -122,7 +149,7 @@ export const multiColor = [
   green[6],
   blue[6],
   indigo[6],
-  violet[6]
+  violet[6],
 ];
 export const multiColorLight = [
   red[2],
@@ -131,16 +158,16 @@ export const multiColorLight = [
   green[2],
   blue[2],
   indigo[2],
-  violet[2]
+  violet[2],
 ];
 export const multiColorDark = [
-  red[9],
-  orange[9],
-  yellow[9],
-  green[9],
-  blue[9],
-  indigo[9],
-  violet[9]
+  red[11],
+  orange[11],
+  yellow[11],
+  green[11],
+  blue[11],
+  indigo[11],
+  violet[11],
 ];
 
 export default {

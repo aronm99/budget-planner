@@ -1,91 +1,102 @@
 
-import { ChartsDoughnut } from '#build/components';
 <template>
   <v-card class="mt-6 ml-6 mr-6">
     <v-card-text>
       <div class="text-h5">
         Expense Breakdown
       </div>
-      <Doughnut class="chart" :data="data" :options="options" />
+      <Doughnut class="chart" ref="pieChart" :data="chartData" :options="chartOptions" />
     </v-card-text>
   </v-card>
 </template>
 
-<script setup lang="ts">
-  import { ref } from 'vue';
+<script lang="ts">
+    import { ref } from 'vue';
   import { useRouter } from 'vue-router';
 
   import { useTheme } from 'vuetify';
 
   import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-  import type { Chart, ChartOptions, ChartData, ChartEvent, ActiveElement } from 'chart.js';
+  import type { Chart, ChartEvent, ActiveElement } from 'chart.js';
 
   import { Doughnut } from 'vue-chartjs'
 
   import colors from '~/lib/colors';
   import categories from '~/lib/categories';
+  
+  // the index of the section currently showing, default to 0
+  const sectionIndex = ref(0);
 
-  const router = useRouter();
-  const theme = useTheme();
-  const section = ref(router.currentRoute.value.query.section || categories[0]);
+  // the refs for the mutable chart data
+  const bgColor = ref(colors.multiColorLight);
+  const offset = ref(new Array(categories.length).fill(0));
 
-  const baseBgColor = ref(theme.global.current.value.dark ? colors.multiColorDark : colors.multiColorLight);
+  // when a section of the chart is clicked set the section index to the section selected
+  const onChartClick = (event: ChartEvent, activeElement: ActiveElement[]) => {
+    sectionIndex.value = activeElement[0].index;    
+  }
 
-  const onChartClick = (event: ChartEvent, activeElement: ActiveElement[], chart: Chart) => {
-    const index = activeElement[0].index;
+  export default {
+    components: { Doughnut },
+    setup() {
+      const router = useRouter();
+      const theme = useTheme();
+      
+      // if in the url query params there is a section name, use that as default selected section
+      if (router.currentRoute.value.query.section) sectionIndex.value = categories.findIndex((category) => category === router.currentRoute.value.query.section);
+
+      // set the base of the chart background colours to be based on the current theme
+      bgColor.value = [...theme.global.current.value.dark ? colors.multiColorDark : colors.multiColorLight];
+
+      // make the currently selected section look different (more saturated colour and have an offset)
+      bgColor.value[sectionIndex.value] = colors.multiColor[sectionIndex.value];
+      offset.value[sectionIndex.value] = 20;
     
-    section.value = categories[index];
-
-    const newBgColors = [...baseBgColor.value];
-    newBgColors[index] = colors.multiColor[index];
-
-    const newOffset = new Array(categories.length).fill(0);
-    newOffset[index] = 20;
+      
+      ChartJS.register(ArcElement, Tooltip, Legend);
     
-    chart.data.datasets[0].backgroundColor = newBgColors;
-    (chart as Chart<"doughnut">).data.datasets[0].offset = newOffset;
+      // when the selected section changes, update backgorund color, offset, and set the query params in the url to be the new section
+      watch(() => sectionIndex.value, (val) => {
+        bgColor.value = [...theme.global.current.value.dark ? colors.multiColorDark : colors.multiColorLight];
+        bgColor.value[sectionIndex.value] = colors.multiColor[sectionIndex.value];
+
+        offset.value = new Array(categories.length).fill(0);
+        offset.value[sectionIndex.value] = 20;
+
+        router.push({ query: { ...router.currentRoute.value.query, section: categories[val] } });
+      });
     
-    chart.update();
+      // if the theme changes update the colour scheme of the background colors
+      watch(() => theme.global.current.value.dark, (val) => {
+        bgColor.value = [...val ? colors.multiColorDark : colors.multiColorLight];
+        bgColor.value[sectionIndex.value] = colors.multiColor[sectionIndex.value];
+      });
+
+    },
+    computed: {
+      chartData() {
+        return({
+          labels: categories,
+          datasets: [
+            {
+              backgroundColor: bgColor.value,
+              hoverBackgroundColor: colors.multiColor,
+              hoverOffset: 20,
+              offset: offset.value,
+              data: [40, 20, 80, 10, 45, 65, 45]
+            }
+          ]
+        })
+      },
+      chartOptions() {
+        return {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: onChartClick,
+        }
+      },
+    }
   }
-
-  const backgroundColor = [...baseBgColor.value];
-  const offset =  new Array(categories.length).fill(0);
-
-  if (section.value) {
-    const index = categories.findIndex((category) => category === section.value);
-    backgroundColor[index] = colors.multiColor[index];
-    offset[index] = 20;
-  }
-
-  const data: ChartData<"doughnut"> = {
-    labels: categories,
-    datasets: [
-      {
-        backgroundColor,
-        hoverBackgroundColor: colors.multiColor,
-        hoverOffset: 20,
-        offset,
-        data: [40, 20, 80, 10, 45, 65, 45]
-      }
-    ]
-  }
-
-  const options: ChartOptions<"doughnut"> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    onClick: onChartClick,
-  }
-
-  ChartJS.register(ArcElement, Tooltip, Legend)
-
-  watch(() => section.value, (val) => {
-    const currentQuery = router.currentRoute.value.query;
-    router.push({ query: { ...router.currentRoute.value.query, section: val } });
-  });
-
-  watch(() => theme.global.current.value.dark, (val) => {
-    baseBgColor.value = val ? colors.multiColorDark : colors.multiColorLight;
-  });
 </script>
 
 <style scoped>
