@@ -33,7 +33,7 @@
     setup (props) {
       const router = useRouter();
 
-      const sectionTitle = ref(router.currentRoute.value.query.section ? router.currentRoute.value.query.section as string : categories[0]);
+      const sectionTitle = ref(router.currentRoute.value.query.section ? router.currentRoute.value.query.section as string : "All");
       const sectionIndex = ref(categories.findIndex((category) => category === sectionTitle.value));
       const color = ref(colors.multiColor[sectionIndex.value]);
       

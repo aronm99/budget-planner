@@ -142,6 +142,22 @@ export const violet = [
   '#0F0722',
 ];
 
+export const grey = [
+  '#fafafa',
+  '#f5f5f5',
+  '#eeeeee',
+  '#e0e0e0',
+  '#bdbdbd',
+  '#a8a8a8',
+  '#9e9e9e',
+  '#757575',
+  '#616161',
+  '#424242',
+  '#474747',
+  '#212121',
+  '#121212',
+]
+
 export const multiColor = [
   red[6],
   orange[6],
@@ -150,6 +166,7 @@ export const multiColor = [
   blue[6],
   indigo[6],
   violet[6],
+  grey[6],
 ];
 export const multiColorLight = [
   red[2],
@@ -159,6 +176,7 @@ export const multiColorLight = [
   blue[2],
   indigo[2],
   violet[2],
+  grey[2],
 ];
 export const multiColorDark = [
   red[11],
@@ -168,9 +186,11 @@ export const multiColorDark = [
   blue[11],
   indigo[11],
   violet[11],
+
 ];
 
 export default {
+
   red,
   orange,
   yellow,
