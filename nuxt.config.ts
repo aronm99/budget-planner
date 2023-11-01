@@ -23,5 +23,9 @@ export default defineNuxtConfig({
       },
     },
   },
+  runtimeConfig: {
+    githubClientId: "",
+		githubClientSecret: ""
+  },
   devtools: { enabled: true },
 })
