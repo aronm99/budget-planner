@@ -1,8 +1,5 @@
 <script lang="ts" setup>
   import { useAuthenticatedUser } from '../composables/auth';
-  definePageMeta({
-    middleware: ["protected"]
-  });
 
   const user = useAuthenticatedUser();
 
