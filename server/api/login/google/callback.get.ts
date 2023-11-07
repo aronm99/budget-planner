@@ -1,9 +1,9 @@
 import { OAuthRequestError } from "@lucia-auth/oauth";
 
-import { auth, githubAuth } from "../../../utils/lucia";
+import { auth, googleAuth } from "../../../utils/lucia";
 
 export default defineEventHandler(async (event) => {
-	const storedState = getCookie(event, "github_oauth_state");
+	const storedState = getCookie(event, "google_oauth_state");
 	const query = getQuery(event);
 	const state = query.state?.toString();
 	const code = query.code?.toString();
@@ -17,15 +17,18 @@ export default defineEventHandler(async (event) => {
 		);
 	}
 	try {
-		const { getExistingUser, githubUser, createUser } =
-			await githubAuth.validateCallback(code);
+		const { getExistingUser, googleUser, createUser } =
+			await googleAuth.validateCallback(code);
 
+		console.log(googleUser);
 		const getUser = async () => {
 			const existingUser = await getExistingUser();
 			if (existingUser) return existingUser;
-			const user = await createUser({
+			const user = await createUser({ 
 				attributes: {
-					username: githubUser.login
+					name: googleUser.name,
+					email: googleUser.email || '',
+					profileImage: googleUser.picture,
 				}
 			});
 			return user;
@@ -40,6 +43,7 @@ export default defineEventHandler(async (event) => {
 		authRequest.setSession(session);
 		return sendRedirect(event, "/"); // redirect to profile page
 	} catch (e) {
+		console.log(e);
 		if (e instanceof OAuthRequestError) {
 			// invalid code
 			return sendError(

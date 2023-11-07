@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,13 +9,16 @@ datasource db {
 
 /// the table for the user
 model User {
-  pId          Int            @id @default(autoincrement())
-  id           String         @unique
-  email        String         @unique
-  name         String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  transactions Transactions[]
+  pId               Int            @id @default(autoincrement())
+  id                String         @unique
+  email             String         @unique
+  name              String?
+  profileImage      String?        @map("profile_image")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  transactions      Transactions[]
+  user_key          UserKey[]
+  user_auth_session UserSession[]
 }
 
 /// the table for the transactions the user has completed
@@ -32,6 +32,26 @@ model Transactions {
   completedAt DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userPId], references: [pId])
+}
 
-  user User @relation(fields: [userPId], references: [pId])
+model UserSession {
+  id             String @id @unique
+  user_id        String
+  active_expires BigInt
+  idle_expires   BigInt
+  user           User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("user_session")
+}
+
+model UserKey {
+  id              String  @id @unique
+  hashed_password String?
+  user_id         String
+  user            User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("user_key")
 }

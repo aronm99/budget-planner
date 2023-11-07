@@ -24,8 +24,9 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    githubClientId: "",
-		githubClientSecret: ""
+    googleClientId: "",
+    googleClientSecret: "",
+    googleRedirectUri: "",
   },
   devtools: { enabled: true },
 })

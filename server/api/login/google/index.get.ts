@@ -1,9 +1,9 @@
-import { githubAuth } from "../../../utils/lucia";
+import { googleAuth } from "../../../utils/lucia";
 
 // server/api/login/github/index.get.ts
 export default defineEventHandler(async (event) => {
-	const [url, state] = await githubAuth.getAuthorizationUrl();
-	setCookie(event, "github_oauth_state", state, {
+	const [url, state] = await googleAuth.getAuthorizationUrl();
+	setCookie(event, "google_oauth_state", state, {
 		httpOnly: true,
 		secure: !process.dev,
 		path: "/",
