@@ -10,15 +10,8 @@
   </v-row>
 </template>
   
-<script lang="ts">
-import { defineComponent, ref } from 'vue'
-
-
-export default defineComponent({
-  setup () {
-    const sectionIndex = ref(0);
-  },
-})
+<script setup lang="ts">
+import { ref } from 'vue'
 </script>
 
 <style scoped>
