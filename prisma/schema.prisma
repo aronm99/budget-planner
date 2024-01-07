@@ -26,6 +26,7 @@ model Transactions {
   pId         Int      @id @default(autoincrement())
   id          String   @unique
   userPId     Int
+  name        String
   amount      Float
   type        String
   note        String?
