@@ -1,4 +1,4 @@
-import { User } from "lucia";
+import type { User } from "lucia";
 import { useUser } from "~/composables/auth";
 
 // paths to ignore when redirecting to login page
