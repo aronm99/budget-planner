@@ -3,7 +3,8 @@ export default [
   'Fashion',
   'Food',
   'Car',
-  'Travel',
+  'Entertainment',
   'Public Transportation',
+  'Health',
   'Other'
 ]

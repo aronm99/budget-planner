@@ -30,6 +30,7 @@
   // the refs for the mutable chart data
   const bgColor = ref(colors.multiColor);
   const offset = ref(new Array(categories.length).fill(0));
+  const chartData = ref<number[]>([]);
 
   // when a section of the chart is clicked set the section index to the section selected
   const onChartClick = (event: ChartEvent, activeElement: ActiveElement[]) => {
@@ -46,6 +47,16 @@
       const router = useRouter();
       const theme = useTheme();
       
+      $fetch('api/transaction/summary', { method: 'GET'}).then((res: unknown) => {
+        const resData = res as { [key: string]: number };
+        const data: number[] = [];
+        for (const type of categories) {
+          data.push(resData[type] ?? 0);
+        }
+        chartData.value = data;
+      });
+
+
       // if in the url query params there is a section name, use that as default selected section
       if (router.currentRoute.value.query.section) sectionIndex.value = categories.findIndex((category) => category === router.currentRoute.value.query.section);
 
@@ -104,7 +115,7 @@
               hoverBackgroundColor: colors.multiColor,
               hoverOffset: 20,
               offset: offset.value,
-              data: [40, 20, 80, 10, 45, 65, 45]
+              data: chartData.value,
             }
           ]
         })

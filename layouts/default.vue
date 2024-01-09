@@ -92,9 +92,9 @@
     </v-navigation-drawer>
 
     <v-app-bar>
-      <v-app-bar-title>Application</v-app-bar-title>
+      <v-app-bar-title>{{PageTitle}}</v-app-bar-title>
     </v-app-bar>
-
+    
     <v-main>
       <slot />
     </v-main>
@@ -111,6 +111,8 @@ const user = useAuthenticatedUser();
 const themeVal  = ref(theme.global.name.value);
 const rail = ref(true);
 
+const PageTitle = ref('Home');
+
 const toggleTheme = () => theme.global.name.value = themeVal.value;
 
 const onThemeButtonClick = () => {
@@ -119,6 +121,8 @@ const onThemeButtonClick = () => {
 };
 
 const toggleRail = () => rail.value = !rail.value;
+
+
 
 
 const menuItemClicked = async (item: string) => {
