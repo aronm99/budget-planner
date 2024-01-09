@@ -6,17 +6,16 @@
       </div>
       <v-divider class="border-opacity-100 mb-4" thickness="10" :color="color" />
       <span class="text-h6 mr-2">Total Spent</span>
-      <span class="text-h6 font-weight-bold">$100</span>
+      <span class="text-h6 font-weight-bold">${{ totalSum.toFixed(2) }}</span>
       <div class="mt-2 text-h5" >Recent Transactions</div>
-      <v-table>
-        <tbody>
-          <tr v-for="i in 5" :key="i">
-            <td class="text-subtitle-1">Transaction {{ i }}</td>
-            <td>$20</td>
-            <td class="text-body-2 text-medium-emphasis">{{ (new Date(Date.now() - 10000*i)).toUTCString() }}</td>
-          </tr>
-        </tbody>
-      </v-table>
+      <v-data-table
+        :headers="headers"
+        :items="transactions"
+        :loading="loading"
+        :no-data-text="loading ? '' : 'No transactions'"
+        :no-results-text="loading ? '' : 'No transactions'"
+        :items-per-page="5"
+      />
     </v-card-text>
   </v-card>
 </template>
@@ -29,22 +28,50 @@
   import colors from '~/lib/colors';
 
 
+  const headers = [
+    { text: 'Name', key:'name', value: 'name' },
+    { text: 'Amount', key:'amount', value: (value: { id: number, name: string, type: string, completedAt: string, amount: number }) => `$${value.amount.toFixed(2)}` },
+    { text: 'Date', key:'date', value: (value: { id: number, name: string, type: string, completedAt: string, amount: number }) => (new Date(value.completedAt)).toLocaleString() },
+  ]
+
   export default defineComponent({
     setup (props) {
       const router = useRouter();
+
+      const loading = ref(true);
+      const totalSum = ref(0);
+      const transactions = ref<{ id: number, name: string, type: string, completedAt: Date, amount: number }[]>([]); 
 
       const sectionTitle = ref(router.currentRoute.value.query.section ? router.currentRoute.value.query.section as string : "All");
       const sectionIndex = ref(categories.findIndex((category) => category === sectionTitle.value));
       const color = ref(colors.multiColor[sectionIndex.value]);
       
+      $fetch('api/transaction/many', { method: 'GET', query: { type: sectionTitle.value }}).then((res: unknown) => {
+        const resData = res as { sum: number, transactions: { id: number, name: string, type: string, completedAt: Date, amount: number }[] };
+        totalSum.value = resData.sum;
+        transactions.value = resData.transactions;
+        loading.value = false;
+      });
+      
       watch(() => router.currentRoute.value.query.section, (val) => {
-        sectionTitle.value = val ? val as string : categories[0];
+        sectionTitle.value = val ? val as string : "All";
         sectionIndex.value = categories.findIndex((category) => category === sectionTitle.value);
         color.value = colors.multiColor[sectionIndex.value];
+        loading.value = true;
+        $fetch('api/transaction/many', { method: 'GET', query: { type: sectionTitle.value }}).then((res: unknown) => {
+          const resData = res as { sum: number, transactions: { id: number, name: string, type: string, completedAt: Date, amount: number }[] };
+          totalSum.value = resData.sum;
+          transactions.value = resData.transactions;
+          loading.value = false;
+        });
       });
 
       return {
         sectionTitle,
+        totalSum,
+        transactions,
+        loading,
+        headers: headers as any,
         color,
       }
     },
