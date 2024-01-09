@@ -18,6 +18,7 @@ export const auth = lucia({
 	}),
   getUserAttributes: (data: UserSchema) => {
 		return {
+			pId: data.pId,
 			id: data.id,
 			name: data.name,
 			email: data.email,

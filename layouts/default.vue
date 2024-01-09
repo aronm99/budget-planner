@@ -23,13 +23,12 @@
         />
 
         <v-divider class="mt-auto"/>
-        <v-list-item>
-          <v-list-item-icon v-if="rail">
-            <v-btn
+        <v-list-item
+          :link="rail"
+        >
+          <v-list-item-icon v-if="rail" @click="onThemeButtonClick">
+            <v-icon
               :icon="themeVal === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-              rounded="0"
-              block
-              @click="onThemeButtonClick"
             />
           </v-list-item-icon>
           <v-switch
@@ -110,23 +109,16 @@ const theme = useTheme();
 const user = useAuthenticatedUser();
 
 const themeVal  = ref(theme.global.name.value);
-const rail = ref(false);
+const rail = ref(true);
 
-
-const toggleTheme = () => {
-  console.log('onThemeToggle', themeVal.value);
-  theme.global.name.value = themeVal.value;
-};
+const toggleTheme = () => theme.global.name.value = themeVal.value;
 
 const onThemeButtonClick = () => {
   themeVal.value = themeVal.value === 'light' ? 'dark' : 'light';
   toggleTheme();
 };
 
-const toggleRail = () => {
-  console.log('onRailToggle');
-  rail.value = !rail.value;
-};
+const toggleRail = () => rail.value = !rail.value;
 
 
 const menuItemClicked = async (item: string) => {

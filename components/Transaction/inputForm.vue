@@ -6,10 +6,15 @@
           <v-text-field v-model="formData.name" label="Name" required></v-text-field>
         </v-col>
         <v-col cols="12" md="6">
-          <v-text-field v-model="formData.category" label="Category" required></v-text-field>
+          <v-select
+            label="Category"
+            v-model="formData.category"
+            :items="categories"
+            required
+          ></v-select>
         </v-col>
         <v-col cols="12" md="6">
-          <v-text-field v-model="formData.transactionAmount" label="Transaction Amount" required type="number"></v-text-field>
+          <v-text-field v-model="formData.transactionAmount" label="Transaction Amount" required type="number" :rules="transactionAmountValidation"></v-text-field>
         </v-col>
       </v-row>
       <v-row >
@@ -28,21 +33,34 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
+  import categories from '~/lib/categories';
 
   const formData = ref({
     name: '',
     category: '',
     completedDate: undefined,
-    transactionAmount: 0,
-  });
+    transactionAmount: '0',
+  });  
+
+  const transactionAmountValidation = [
+    (v: number | string) => {
+      const floatValue = parseFloat(v as string);
+      return !isNaN(floatValue) && floatValue > 0;
+    }
+  ]
 
 
   const submitForm = () => {
     // Handle form submission, e.g., send data to the server
-    console.log('Form submitted:', formData.value);
+    console.log('Form submitted:', JSON.stringify(formData.value, null, 2));
     const transation = $fetch('api/transaction/single', {
       method: 'POST',
-      body: formData.value,
+      body: {
+        name: formData.value.name,
+        category: formData.value.category,
+        completedDate: formData.value.completedDate,
+        transactionAmount: parseFloat(formData.value.transactionAmount),
+      }
     });
 
   };
