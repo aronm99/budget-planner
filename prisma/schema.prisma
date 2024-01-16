@@ -28,8 +28,10 @@ model Transactions {
   userPId     Int
   name        String
   amount      Float
-  type        String
-  note        String?
+  isIncome    Boolean  @default(false)
+  category    String   @default("Miscellaneous")
+  subCategory String?
+  notes       String?
   completedAt DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

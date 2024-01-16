@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   
   const query = getQuery(event);
 
-  const type = !query.type || query.type === "All" ? undefined : query.type as string;
+  const category = !query.category || query.category === "All" ? undefined : query.type as string;
 
   const currentDate = new Date();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
       },
       where: {
         userPId: event.context.user.pId,
-        type,
+        category,
         completedAt: {
           gte: firstDayOfMonth.toISOString(),
           lte: currentDate.toISOString(),
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     prisma.transactions.findMany({
       where: {
         userPId: event.context.user.pId,
-        type,
+        category,
         completedAt: {
           gte: firstDayOfMonth.toISOString(),
           lte: currentDate.toISOString(),
@@ -43,7 +43,8 @@ export default defineEventHandler(async (event) => {
       select: {
         id: true,
         name: true,
-        type: true,
+        category: true,
+        subCategory: true,
         completedAt: true,
         amount: true,
       },

@@ -1,5 +1,5 @@
-export const categoryObject = [
-  {
+export const categoryObject: { [category: string]: { name: string, subCategories: string[] }} = {
+  "Housing": {
     "name": "Housing",
     "subCategories": [
       "Mortgage or rent",
@@ -8,7 +8,7 @@ export const categoryObject = [
       "Maintenance and repairs"
     ]
   },
-  {
+  "Utilities": {
     "name": "Utilities",
     "subCategories": [
       "Electricity",
@@ -19,7 +19,7 @@ export const categoryObject = [
       "Phone bills"
     ]
   },
-  {
+  "Transportation": {
     "name": "Transportation",
     "subCategories": [
       "Car payment",
@@ -29,14 +29,14 @@ export const categoryObject = [
       "Public transportation"
     ]
   },
-  {
+  "Groceries": {
     "name": "Groceries",
     "subCategories": [
       "Food and beverages",
       "Toiletries and household items"
     ]
   },
-  {
+  "Health": {
     "name": "Health",
     "subCategories": [
       "Health insurance premiums",
@@ -46,7 +46,7 @@ export const categoryObject = [
       "Vision care"
     ]
   },
-  {
+  "Insurance": {
     "name": "Insurance",
     "subCategories": [
       "Life insurance",
@@ -54,7 +54,7 @@ export const categoryObject = [
       "Long-term care insurance"
     ]
   },
-  {
+  "Debt Payments": {
     "name": "Debt Payments",
     "subCategories": [
       "Credit card payments",
@@ -62,7 +62,7 @@ export const categoryObject = [
       "Personal loan payments"
     ]
   },
-  {
+  "Savings": {
     "name": "Savings",
     "subCategories": [
       "Emergency fund",
@@ -70,7 +70,7 @@ export const categoryObject = [
       "Other savings goals (e.g., vacation fund, education fund)"
     ]
   },
-  {
+  "Entertainment": {
     "name": "Entertainment",
     "subCategories": [
       "Dining out",
@@ -79,7 +79,7 @@ export const categoryObject = [
       "Subscriptions (e.g., streaming services, magazines)"
     ]
   },
-  {
+  "Personal Care": {
     "name": "Personal Care",
     "subCategories": [
       "Haircuts",
@@ -87,14 +87,14 @@ export const categoryObject = [
       "Gym or fitness memberships"
     ]
   },
-  {
+  "Clothing": {
     "name": "Clothing",
     "subCategories": [
       "Clothing purchases",
       "Dry cleaning and laundry"
     ]
   },
-  {
+  "Education": {
     "name": "Education",
     "subCategories": [
       "Tuition fees",
@@ -102,7 +102,7 @@ export const categoryObject = [
       "Educational subscriptions or courses"
     ]
   },
-  {
+  "Childcare/Children": {
     "name": "Childcare/Children",
     "subCategories": [
       "Daycare or babysitting",
@@ -110,7 +110,7 @@ export const categoryObject = [
       "Extracurricular activities"
     ]
   },
-  {
+  "Gifts and Celebrations": {
     "name": "Gifts and Celebrations",
     "subCategories": [
       "Birthday gifts",
@@ -119,7 +119,7 @@ export const categoryObject = [
       "Celebration expenses"
     ]
   },
-  {
+  "Miscellaneous": {
     "name": "Miscellaneous",
     "subCategories": [
       "Pet care",
@@ -128,6 +128,6 @@ export const categoryObject = [
       "Miscellaneous expenses"
     ]
   }
-];
+};
 
-export const categories = categoryObject.map((category) => category.name);
+export const categories = Object.values(categoryObject).map((category) => category.name);

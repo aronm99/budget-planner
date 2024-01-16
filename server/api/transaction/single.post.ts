@@ -11,9 +11,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-	const { name, category, completedDate, transactionAmount } = await readBody<{
+	const { name, category, subCategory, isIncome, completedDate, transactionAmount } = await readBody<{
 		name: string;
     category: string;
+    subCategory?: string;
+    isIncome: boolean;
 		completedDate: Date;
     transactionAmount: number;
 	}>(event);
@@ -22,7 +24,9 @@ export default defineEventHandler(async (event) => {
     data: {
       id: `TRNS${ulid()}`,
       name,
-      type: category,
+      category,
+      subCategory,
+      isIncome,
       completedAt: completedDate,
       amount: transactionAmount,
       userPId: event.context.user.pId
@@ -30,7 +34,8 @@ export default defineEventHandler(async (event) => {
     select: {
       id: true,
       name: true,
-      type: true,
+      category: true,
+      subCategory: true,
       completedAt: true,
       amount: true,
     }

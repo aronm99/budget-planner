@@ -30,8 +30,9 @@
 
   const headers = [
     { text: 'Name', key:'name', value: 'name' },
-    { text: 'Amount', key:'amount', value: (value: { id: number, name: string, type: string, completedAt: string, amount: number }) => `$${value.amount.toFixed(2)}` },
-    { text: 'Date', key:'date', value: (value: { id: number, name: string, type: string, completedAt: string, amount: number }) => (new Date(value.completedAt)).toLocaleString() },
+    { text: 'Sub Type', key: 'subCategory', value: 'subCategory'},
+    { text: 'Amount', key:'amount', value: (value: { id: number, name: string, category: string, subCategory?: string, completedAt: string, amount: number }) => `$${value.amount.toFixed(2)}` },
+    { text: 'Date', key:'date', value: (value: { id: number, name: string, category: string, subCategory?: string, completedAt: string, amount: number }) => (new Date(value.completedAt)).toDateString() },
   ]
 
   export default defineComponent({
