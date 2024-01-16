@@ -22,7 +22,7 @@
   import { Doughnut } from 'vue-chartjs'
 
   import colors from '~/lib/colors';
-  import categories from '~/lib/categories';
+  import { categories } from '~/lib/categories';
   
   // the index of the section currently showing, default to 0
   const sectionIndex = ref(-1);

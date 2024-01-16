@@ -27,7 +27,9 @@
     "chart.js": "^4.4.0",
     "lodash": "^4.17.21",
     "lucia": "^2.7.2",
+    "openai": "^4.24.7",
     "sass": "^1.69.0",
+    "tesseract.js": "^5.0.4",
     "ulid": "^2.3.0",
     "vue-chartjs": "^5.2.0",
     "vuetify": "^3.3.20"

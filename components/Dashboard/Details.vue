@@ -24,7 +24,7 @@
   import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router';
 
-  import categories from '~/lib/categories';
+  import { categories } from '~/lib/categories';
   import colors from '~/lib/colors';
 
 

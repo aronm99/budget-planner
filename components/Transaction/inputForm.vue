@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import categories from '~/lib/categories';
+  import { categories } from '~/lib/categories';
 
   const formData = ref({
     name: '',

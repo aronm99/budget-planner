@@ -11,8 +11,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log(event.context.user);
-
 	const { name, category, completedDate, transactionAmount } = await readBody<{
 		name: string;
     category: string;

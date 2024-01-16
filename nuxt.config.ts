@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     googleClientId: "",
     googleClientSecret: "",
     googleRedirectUri: "",
+    openAiApiKey: "",
   },
   devtools: { enabled: true },
 })

@@ -54,8 +54,6 @@ export default defineEventHandler(async (event) => {
     }),
   ]);
 
-  console.log(transactions);
-
   return {
     sum: transactions[0]._sum.amount ?? 0,
     transactions: transactions[1],
