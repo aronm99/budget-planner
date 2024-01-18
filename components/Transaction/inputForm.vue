@@ -61,7 +61,6 @@
 
   const submitForm = () => {
     // Handle form submission, e.g., send data to the server
-    console.log('Form submitted:', JSON.stringify(formData.value, null, 2));
     const transation = $fetch('api/transaction/single', {
       method: 'POST',
       body: {

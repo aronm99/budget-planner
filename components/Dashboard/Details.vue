@@ -30,7 +30,7 @@
 
   const headers = [
     { text: 'Name', key:'name', value: 'name' },
-    { text: 'Sub Type', key: 'subCategory', value: 'subCategory'},
+    { text: 'Sub Category', key: 'subCategory', value: 'subCategory'},
     { text: 'Amount', key:'amount', value: (value: { id: number, name: string, category: string, subCategory?: string, completedAt: string, amount: number }) => `$${value.amount.toFixed(2)}` },
     { text: 'Date', key:'date', value: (value: { id: number, name: string, category: string, subCategory?: string, completedAt: string, amount: number }) => (new Date(value.completedAt)).toDateString() },
   ]
@@ -41,14 +41,14 @@
 
       const loading = ref(true);
       const totalSum = ref(0);
-      const transactions = ref<{ id: number, name: string, type: string, completedAt: Date, amount: number }[]>([]); 
+      const transactions = ref<{ id: number, name: string, category: string, subCategory: string, completedAt: Date, amount: number }[]>([]); 
 
       const sectionTitle = ref(router.currentRoute.value.query.section ? router.currentRoute.value.query.section as string : "All");
       const sectionIndex = ref(categories.findIndex((category) => category === sectionTitle.value));
       const color = ref(colors.multiColor[sectionIndex.value]);
       
-      $fetch('api/transaction/many', { method: 'GET', query: { type: sectionTitle.value }}).then((res: unknown) => {
-        const resData = res as { sum: number, transactions: { id: number, name: string, type: string, completedAt: Date, amount: number }[] };
+      $fetch('api/transaction/many', { method: 'GET', query: { category: sectionTitle.value }}).then((res: unknown) => {
+        const resData = res as { sum: number, transactions: { id: number, name: string, category: string, subCategory: string; completedAt: Date, amount: number }[] };
         totalSum.value = resData.sum;
         transactions.value = resData.transactions;
         loading.value = false;
@@ -59,8 +59,8 @@
         sectionIndex.value = categories.findIndex((category) => category === sectionTitle.value);
         color.value = colors.multiColor[sectionIndex.value];
         loading.value = true;
-        $fetch('api/transaction/many', { method: 'GET', query: { type: sectionTitle.value }}).then((res: unknown) => {
-          const resData = res as { sum: number, transactions: { id: number, name: string, type: string, completedAt: Date, amount: number }[] };
+        $fetch('api/transaction/many', { method: 'GET', query: { category: sectionTitle.value }}).then((res: unknown) => {
+          const resData = res as { sum: number, transactions: { id: number, name: string, category: string, subCategory: string; completedAt: Date, amount: number }[] };
           totalSum.value = resData.sum;
           transactions.value = resData.transactions;
           loading.value = false;

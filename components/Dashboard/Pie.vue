@@ -17,7 +17,7 @@
   import { useTheme } from 'vuetify';
 
   import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-  import type { Chart, ChartEvent, ActiveElement } from 'chart.js';
+  import type { ChartEvent, ActiveElement } from 'chart.js';
 
   import { Doughnut } from 'vue-chartjs'
 
@@ -50,8 +50,8 @@
       $fetch('api/transaction/summary', { method: 'GET'}).then((res: unknown) => {
         const resData = res as { [key: string]: number };
         const data: number[] = [];
-        for (const type of categories) {
-          data.push(resData[type] ?? 0);
+        for (const category of categories) {
+          data.push(resData[category] ?? 0);
         }
         chartData.value = data;
       });
