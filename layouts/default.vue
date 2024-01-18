@@ -17,6 +17,12 @@
         />
         <v-list-item
           link
+          prepend-icon="mdi-file"
+          title="Add Bill/Statement"
+          @click="navigateTo('/add-statement')"
+        />
+        <v-list-item
+          link
           prepend-icon="mdi-plus"
           title="Add Transaction"
           @click="navigateTo('/new-transaction')"
