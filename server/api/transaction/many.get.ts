@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   
   const query = getQuery(event);
 
-  const category = !query.category || query.category === "All" ? undefined : query.type as string;
+  const category = !query.category || query.category === "All" ? undefined : query.category as string;
 
   const currentDate = new Date();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
       take: 5,
     }),
   ]);
-
+  
   return {
     sum: transactions[0]._sum.amount ?? 0,
     transactions: transactions[1],

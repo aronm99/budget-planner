@@ -4,9 +4,11 @@ export default defineNuxtConfig({
     'vuetify/lib/styles/main.sass',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
+
   build: {
     transpile: ['vuetify'],
   },
+
   modules: [
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
@@ -16,6 +18,7 @@ export default defineNuxtConfig({
     },
     //...
   ],
+
   vite: {
     vue: {
       template: {
@@ -23,11 +26,14 @@ export default defineNuxtConfig({
       },
     },
   },
+
   runtimeConfig: {
     googleClientId: "",
     googleClientSecret: "",
     googleRedirectUri: "",
     openAiApiKey: "",
   },
+
   devtools: { enabled: true },
+  compatibilityDate: '2025-01-12',
 })

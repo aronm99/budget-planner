@@ -14,12 +14,13 @@ export default defineEventHandler(async (event) => {
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
   const transactionSums = await prisma.transactions.groupBy({
-    by: ['type'],
+    by: ['category'],
     _sum: {
       amount: true,
     },
     where: {
       userPId: event.context.user.pId,
+      isIncome: false,
       completedAt: {
         gte: firstDayOfMonth.toISOString(),
         lte: currentDate.toISOString(),
@@ -27,10 +28,10 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  const resultSum: {[type: string]: number } = {};
+  const resultSum: {[category: string]: number } = {};
 
   transactionSums.forEach((sum) => {
-    resultSum[sum.type] = sum._sum.amount ?? 0;
+    resultSum[sum.category] = sum._sum.amount ?? 0;
   });
   
   return resultSum;

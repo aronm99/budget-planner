@@ -1,7 +1,12 @@
 {
     "editor.tabSize": 2,
     "cSpell.words": [
-        "chartjs"
+        "chartjs",
+        "colour",
+        "colours",
+        "nuxt",
+        "tesseract",
+        "vuetify"
     ],
     "javascript.format.semicolons": "insert"
 }
