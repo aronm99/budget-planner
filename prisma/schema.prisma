@@ -35,6 +35,7 @@ model Transactions {
   completedAt DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  rawData     Json?    @map("raw_data")
   user        User     @relation(fields: [userPId], references: [pId])
 }
 

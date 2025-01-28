@@ -6,6 +6,7 @@
         "colours",
         "nuxt",
         "tesseract",
+        "TRNS",
         "vuetify"
     ],
     "javascript.format.semicolons": "insert"

@@ -61,7 +61,7 @@
 
   const submitForm = () => {
     // Handle form submission, e.g., send data to the server
-    const transation = $fetch('api/transaction/single', {
+    const transaction = $fetch('api/transaction/single', {
       method: 'POST',
       body: {
         name: formData.value.name,
