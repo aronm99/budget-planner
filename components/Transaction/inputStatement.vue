@@ -86,7 +86,7 @@
 
   const statementType = ref<'credit-card' | 'bank'>('credit-card');
   const transactionFile = ref<File | null>(null);
-  const transactionString = ref('');
+  const transactionFileContent = ref<string[][]>([]);
   const loading = ref(false);
   const transactions = ref<TransactionItem[]>([]);
   const csvHeaders = ref<{ label: string, value: number }[]>([]);
@@ -103,7 +103,6 @@
   const handleFileChange = async () => {
     if (!transactionFile.value) return;
     const fileContent = await transactionFile.value.text();
-    transactionString.value = fileContent;
     
     // Parse CSV headers
     const lines = fileContent.split('\n');
@@ -114,6 +113,7 @@
       cells = lines[index].split(',');
     }
     csvHeaders.value.push(...lines[index].trim().split(',').map((header, index) => ({ label: header, value: index })));
+    transactionFileContent.value = lines.slice(index).map(line => line.trim().split(','));
   };
 
   const submitForm = async () => {
@@ -122,11 +122,12 @@
     const transactionsResult = await $fetch<StatementResponse>('api/transaction/statement', {
       method: 'POST',
       body: {
-        transactions: transactionString.value,
+        transactions: transactionFileContent.value,
         statementType: statementType.value,
         headerMapping: headerMapping.value,
       }
     });
+    console.log('transactionsResult', transactionsResult);
     transactions.value = transactionsResult.transactions.items as TransactionItem[];
     loading.value = false;
   };

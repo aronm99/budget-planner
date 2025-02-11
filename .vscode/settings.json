@@ -4,7 +4,9 @@
         "chartjs",
         "colour",
         "colours",
+        "jina",
         "nuxt",
+        "tavily",
         "tesseract",
         "TRNS",
         "vuetify"

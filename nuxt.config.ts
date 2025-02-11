@@ -32,6 +32,8 @@ export default defineNuxtConfig({
     googleClientSecret: "",
     googleRedirectUri: "",
     openAiApiKey: "",
+    jinaAiApiKey: "",
+    tavilyApiKey: "",
     model: "",
   },
 

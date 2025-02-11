@@ -24,6 +24,7 @@
     "@lucia-auth/oauth": "^3.3.1",
     "@mdi/font": "^7.2.96",
     "@prisma/client": "^5.4.2",
+    "@tavily/core": "^0.3.1",
     "chart.js": "^4.4.0",
     "lodash": "^4.17.21",
     "lucia": "^2.7.2",

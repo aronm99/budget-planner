@@ -1,70 +1,13 @@
 import { PrismaClient, Transactions } from "@prisma/client";
 import { ulid } from "ulid";
+
 import { categories, categoryObject } from "~/lib/categories";
 import { chatCompletion } from "~/server/utils/llm";
 import { StatementResponse, TransactionItem } from "~/types/transaction";
+import { getTavilyClient } from "~/server/utils/search";
+
 const prisma = new PrismaClient();
 
-const systemPrompt = `You are a financial budgeting agent and need to extract transactions from the provided credit card or bank statement
-For each transaction follow the following steps:
-# Steps
-  1. Extract the name directly from the statement, DO NOT simplify the name 
-  2. Extract the amount directly from the statement, DO NOT simplify the amount 
-  3. extract the date directly from the statement
-  4. if the transaction is a credit card payment ignore it and return null for the name, amount, and date 
-  5. using the list of categories provided in the <Categories> tag, select the category that matches the transaction, make sure the category exists in the list 
-  6. in the object of categories and subcategories provided in the <CategoryObject> tag, get the values where the key matches the category selected in step 2 
-  7. from the list of subcategories found in step 3, select the subcategory that matches the transaction 
-  8. if the transaction is an income or expense, set the isIncome property to true or false 
-  9. return the transaction object with the name, category, subCategory, isIncome, completedAt, and amount properties 
-
-## Categories
-\`\`\`json
-  [${Object.keys(categories).join(", ")}]
-\`\`\`
-
-## SubCategory Object
-\`\`\`json
-  ${JSON.stringify(categoryObject, null, 2).replace(/\\n/g, "\\n  ")}
-\`\`\`
-`
-
-const jsonSchema = {
-  title: "transaction",
-  description: "The transaction object",
-  type: "object",
-  properties: {
-    name: {
-      description: "The name of the transaction, also can be the full store name for the transaction",
-      type: "string"
-    },
-    category: { 
-      type: "string",
-      enum: categories,
-      description: "The category of the transaction, must be one of the predefined categories."
-    },
-    subCategory: {
-      type: "string",
-      description: "The subcategory of the transaction, must be a valid subcategory for the selected category."
-    },
-    isIncome: {
-      type: "boolean",
-      description: "Whether the transaction is an income or expense."
-    },
-    completedAt: { 
-      type: "string",
-      format: "date-time",
-      description: "The date of the transaction in ISO 8601 format"
-    },
-    amount: { 
-      type: "number",
-      description: "The amount of the transaction as a float"
-    }
-  },
-  required: ["name", "category", "subCategory", "isIncome", "completedAt", "amount"]
-};
-
-const name = 'categorized-transactions'
 
 
 export default defineEventHandler<Request, Promise<StatementResponse>>(async (event) => {
@@ -76,208 +19,160 @@ export default defineEventHandler<Request, Promise<StatementResponse>>(async (ev
   }
 
 	const { transactions, statementType, headerMapping } = await readBody<{
-		transactions: string; // CSV string content
+		transactions: string[][]; // CSV string content
 		statementType: 'credit-card' | 'bank';
 		headerMapping: Record<string, number>;
 	}>(event);
 
-	// Split CSV into rows and handle headers
-	const transactionRows = transactions
-		.split('\n')
-		.map(row => row.trim().split(','))
-		.filter(row => row.length > 2);
+  const headings = transactions[0];
 
-	// Extract headers and data rows
-	const headers = transactionRows[0].map(header => header.trim());
-	const dataRows = transactionRows.slice(1);
+  const transactionItems: TransactionItem[] = await Promise.all(transactions.slice(1).filter((t) => t.length > 0).map(async (transaction) => {
+    const id = `TRANS-${ulid()}`;
 
-  let amountIndex: number = -1;
-  let nameIndex: number = -1;
+    const description = transaction[headerMapping['description']];
 
+    const amount = Number(transaction[headerMapping['amount']]);
 
-  let headerPrompt = `You are a financial budgeting agent and need to interpret the headers of the provided credit card or bank statement. 
-You are provided with the headers of the CSV file and need to find the header name for the name and amount. 
-Note: Sometimes the name is under the column 'description' or 'name'.
+    const dateString = transaction[headerMapping['date']];
 
-## Headers
-  ${headers.map(header => `  - ${header}`).join('\n')}
+    const isIncome = statementType === 'credit-card' ? amount < 0 : amount > 0;
 
+    const year = parseInt(dateString.substring(0, 4));
+    const month = parseInt(dateString.substring(4, 6)) - 1;
+    const date = parseInt(dateString.substring(6, 8));
 
-## Example
-\`\`\`json
-  {
-    "amountHeader": "Transaction Amount",
-    "nameHeader": "Description"
-  }
-\`\`\`
-`;
-  console.log('headerPrompt', headerPrompt);
-
-  const headerJsonSchema = {
-    title: "headers",
-    description: "The headers object containing the amount and name column headers from the statement CSV headers",
-    type: "object",
-    properties: {
-      amountHeader: {
-        type: "string",
-        enum: headers,
-        description: "The header name of the transaction amount column, must be one of the headers provided"
-      },
-      nameHeader: {
-        type: "string",
-        enum: headers,
-        description: "The header name of the transaction name column, must be one of the headers provided"
-      },
-    },
-    required: ["amountHeader", "nameHeader"]
-  }
-
-  let result = await chatCompletion(headerPrompt, undefined, undefined, headerJsonSchema, 'header-extraction') as {
-    amountHeader: string;
-    nameHeader: string;
-  };
-
-  console.log('result', result, typeof result, 'amountHeader', result.amountHeader, 'nameHeader', result.nameHeader);
-
-  amountIndex = headers.indexOf(result.amountHeader);
-  nameIndex = headers.indexOf(result.nameHeader);
-
-  while (amountIndex === -1 || nameIndex === -1) {
-     const history = [{
-      role: "user",
-      content: headerPrompt
-    }, {
-      role: "assistant",
-      content: JSON.stringify(result)
-    }];
-
-    console.log('history', JSON.stringify(history, null, 2));
-
-    headerPrompt = `There were errors in the previous response.
-${amountIndex === -1 ? `ERROR: the column header for the amount, ${result.amountHeader}, was not found\n` : ""}${nameIndex === -1 ? `ERROR: the column header for the name, ${result.nameHeader}, was not found\n` : ""}
-
-Reminder the headers are:
-## Headers
-${headers.map(header => `  - ${header}`).join('\n')}`;
-
-    console.log('headerPrompt', headerPrompt);
-
-    result = await chatCompletion(headerPrompt, undefined, history, headerJsonSchema, name) as {
-      amountHeader: string;
-      nameHeader: string;
-    };
-
-
-    amountIndex = headers.indexOf(result.amountHeader);
-    nameIndex = headers.indexOf(result.nameHeader);
-    console.log('amountIndex', amountIndex);
-    console.log('nameIndex', nameIndex);
-  }
-
-
-	const promiseResults = await Promise.all(
-		dataRows.map(async (row) => {
-      const history = [];
-			// Create an object mapping headers to values
-			const rowData = row.reduce((acc, val, index) => {
-				acc[headers[index]] = val.trim();
-				return acc;
-			}, {} as Record<string, string>);
-
-			const formattedRow = JSON.stringify(rowData, null, 2);
-
-			const prompt = statementType === 'credit-card' 
-				? `The credit card transaction with headers is provided below:\n## Credit Card Statement\n\`\`\`json\n  ${formattedRow.replace(/\\n/g, "\\n  ")}\n\`\`\``
-				: `The bank transaction with headers is provided below:\n## Bank Statement\n\`\`\`json\n  ${formattedRow.replace(/\\n/g, "\\n  ")}\n\`\`\``;
-
-      let transactionResult: TransactionItem| null = null;
-
-
-      while (!transactionResult) {
-        const result = await chatCompletion(prompt, systemPrompt, undefined, jsonSchema, name) as {
-          name: string;
-          category: string;
-          subCategory: string;
-          isIncome: boolean;
-          completedAt: string;
-          amount: number;
-        };
-
-        if (!result.name && !result.category && !result.subCategory && !result.isIncome && !result.completedAt && !result.amount) return null;
-        
-        if (!result.name || !result.category || !result.subCategory || !result.isIncome || !result.completedAt || !result.amount) {
-          history.push({
-            role: "assistant",
-            content: JSON.stringify(result)
-          });
-          history.push({
-            role: "user",
-            content: `The following properties are missing from the transaction object:
-  ${!result.name ? "- name\n" : ""}${!result.category ? "- category\n" : ""}${!result.subCategory ? "- subCategory\n" : ""}${!result.isIncome ? "- isIncome\n" : ""}${!result.completedAt ? "- completedAt\n" : ""}${!result.amount ? "- amount\n" : ""}
-  Please fix the errors in the previous response and return the updated transaction object`
-          });
-        }
-
-        if (!categories.includes(result.category)) {
-          history.push({
-            role: "assistant",
-            content: JSON.stringify(result)
-          });
-          history.push({
-            role: "user",
-            content: `The category ${result.category} is not a valid category. Please fix the errors in the previous response and return the updated transaction object\nNote: the valid categories are ${categories.join(", ")}`
-          });
-        }
-
-        if (!categoryObject[result.category].subCategories.includes(result.subCategory)) {
-          history.push({
-            role: "assistant",
-            content: JSON.stringify(result)
-          });
-          history.push({
-            role: "user",
-            content: `The subcategory ${result.subCategory} is not a valid subcategory for the category ${result.category}. Please fix the errors in the previous response and return the updated transaction object\nNote: the valid subcategories for the category ${result.category} are ${categoryObject[result.category].subCategories.join(", ")}`
-          });
-        }
-
-        return {
-          id: `TRNS${ulid()}`,
-          userPId: event.context.user.pId,
-          name: rowData[nameIndex],
-          category: result.category,
-          subCategory: result.subCategory,
-          isIncome: result.isIncome,
-          completedAt: new Date(result.completedAt),
-          amount: parseFloat(rowData[amountIndex]),
-          rawData: formattedRow
-        };
+    const { name: transactionName, location: transactionLocation } = await chatCompletion(
+      `# Transaction Description
+      ${description}
+      `,
+      `You are a helpful assistant that can take a ${statementType} transaction description and split it into the transaction name and the location of the transaction.`,
+      [],
+      {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'The name of the transaction'
+          },
+          location: {
+            type: 'string',
+            description: 'The location of the transaction, if no location was provided, return an empty string'
+          },
+        },
+        required: ['name', 'location']
       }
-		})
-	);
+    ) as { name: string, location: string };
 
+    console.log(transaction[0], 'transactionName', transactionName, 'transactionLocation', transactionLocation);
 
-  const transactionsResults = promiseResults.filter(result => !!result);
+    const results = await getTavilyClient().search( 
+      `What is the transaction ${transactionName} in ${transactionLocation} and what do they do?`,
+      {
+        includeAnswer: true
+      }
+    );
 
+    console.log(transaction[0], 'results',  results);
 
-	try {
-		const transaction = await prisma.transactions.createMany({
-			data: transactionsResults,
-		});
+    const { name } = await chatCompletion(
+      `# Transaction Description
+${results.answer}
 
+# Search Results
+\`\`\`json
+${JSON.stringify(results.results, null, 2).replace(/\n/g, '\n  ')}
+\`\`\`
+      `,
+      `You are a helpful assistant that can take the search results for a transaction description and extract the institution name that the transaction belongs to.`,
+      [],
+      {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'The name of the institution that the transaction belongs to' }
+        },
+        required: ['name']
+      }
+    ) as { name: string };
 
-		return {
-			success: true,
-			transactions: {
-				count: transaction.count,
-				items: transactionsResults
-			}
-		};
-	} catch (error) {
-		console.error('Error creating transactions:', error);
-		throw createError({
-			message: 'Failed to create transactions',
-			statusCode: 500,
-			cause: error
-		});
-	}
+    console.log(transaction[0], 'name', name);
+    
+    const { category } = await chatCompletion(
+      `# Transaction Description
+${results.answer}
+
+# Search Results
+\`\`\`json
+${JSON.stringify(results.results, null, 2).replace(/\n/g, '\n  ')}
+\`\`\`
+      `,
+      `You are a helpful assistant that can take the search results for a transaction description and extract the category of the transaction. Below are the possible categories.
+
+# Transaction Categories
+${categories.map((c) => `  - ${c}`).join('\n')}`,
+      [],
+      {
+        type: 'object',
+        properties: {
+          category: {
+            type: 'string',
+            enum: categories,
+            description: 'The category of the transaction' }
+        },
+        required: ['category']
+      }
+    ) as { category: string };
+
+    console.log(transaction[0], 'category', category);
+    
+    const { subCategory } = await chatCompletion(
+      `# Transaction Description
+${results.answer}
+
+# Search Results
+\`\`\`json
+${JSON.stringify(results.results, null, 2).replace(/\n/g, '\n  ')}
+\`\`\`
+      `,
+      `You are a helpful assistant that can take the search results for a transaction description and extract the sub-category of the transaction. Below are the possible sub-categories:
+# Transaction Category
+${category}
+# Transaction Sub-Categories
+${categoryObject[category].subCategories.map((c) => `  - ${c}`).join('\n')}`,
+      [],
+      {
+        type: 'object',
+        properties: {
+          subCategory: {
+            type: 'string',
+            enum: categoryObject[category].subCategories,
+            description: 'The sub-category of the transaction based on the search results' }
+        },
+        required: ['subCategory']
+      }
+    ) as { subCategory: string };
+
+    console.log(transaction[0], 'subCategory', subCategory);
+    
+    return {
+      id,
+      userPId: event.context.user.id,
+      rawData: transaction.join(','),
+      name,
+      category,
+      subCategory,
+      amount: amount,
+      isIncome,
+      completedAt: new Date(year, month, date),
+    }
+  }));
+
+  console.log('transactionItems', transactionItems);
+
+  return {
+    success: true,
+    transactions: {
+      count: transactionItems.length,
+      items: transactionItems
+    }
+  };
 });
