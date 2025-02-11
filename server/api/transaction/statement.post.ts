@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Transactions } from "@prisma/client";
 import { ulid } from "ulid";
 import { categories, categoryObject } from "~/lib/categories";
 import { chatCompletion } from "~/server/utils/llm";
-import { StatementResponse } from "~/types/transaction";
+import { StatementResponse, TransactionItem } from "~/types/transaction";
 const prisma = new PrismaClient();
 
 const systemPrompt = `You are a financial budgeting agent and need to extract transactions from the provided credit card or bank statement
@@ -75,9 +75,10 @@ export default defineEventHandler<Request, Promise<StatementResponse>>(async (ev
     });
   }
 
-	const { transactions, statementType } = await readBody<{
+	const { transactions, statementType, headerMapping } = await readBody<{
 		transactions: string; // CSV string content
 		statementType: 'credit-card' | 'bank';
+		headerMapping: Record<string, number>;
 	}>(event);
 
 	// Split CSV into rows and handle headers
@@ -166,7 +167,6 @@ ${headers.map(header => `  - ${header}`).join('\n')}`;
       nameHeader: string;
     };
 
-    console.log('result', result, typeof result, 'amountHeader', result.amountHeader, 'nameHeader', result.nameHeader);
 
     amountIndex = headers.indexOf(result.amountHeader);
     nameIndex = headers.indexOf(result.nameHeader);
@@ -177,6 +177,7 @@ ${headers.map(header => `  - ${header}`).join('\n')}`;
 
 	const promiseResults = await Promise.all(
 		dataRows.map(async (row) => {
+      const history = [];
 			// Create an object mapping headers to values
 			const rowData = row.reduce((acc, val, index) => {
 				acc[headers[index]] = val.trim();
@@ -189,79 +190,86 @@ ${headers.map(header => `  - ${header}`).join('\n')}`;
 				? `The credit card transaction with headers is provided below:\n## Credit Card Statement\n\`\`\`json\n  ${formattedRow.replace(/\\n/g, "\\n  ")}\n\`\`\``
 				: `The bank transaction with headers is provided below:\n## Bank Statement\n\`\`\`json\n  ${formattedRow.replace(/\\n/g, "\\n  ")}\n\`\`\``;
 
-			const result = await chatCompletion(prompt, systemPrompt, undefined, jsonSchema, name) as {
-        name: string;
-        category: string;
-        subCategory: string;
-        isIncome: boolean;
-        completedAt: string;
-        amount: number;
-      };
+      let transactionResult: TransactionItem| null = null;
 
-      if (!result.name || !result.category || !result.subCategory || !result.isIncome || !result.completedAt || !result.amount) {
-        return null;
+
+      while (!transactionResult) {
+        const result = await chatCompletion(prompt, systemPrompt, undefined, jsonSchema, name) as {
+          name: string;
+          category: string;
+          subCategory: string;
+          isIncome: boolean;
+          completedAt: string;
+          amount: number;
+        };
+
+        if (!result.name && !result.category && !result.subCategory && !result.isIncome && !result.completedAt && !result.amount) return null;
+        
+        if (!result.name || !result.category || !result.subCategory || !result.isIncome || !result.completedAt || !result.amount) {
+          history.push({
+            role: "assistant",
+            content: JSON.stringify(result)
+          });
+          history.push({
+            role: "user",
+            content: `The following properties are missing from the transaction object:
+  ${!result.name ? "- name\n" : ""}${!result.category ? "- category\n" : ""}${!result.subCategory ? "- subCategory\n" : ""}${!result.isIncome ? "- isIncome\n" : ""}${!result.completedAt ? "- completedAt\n" : ""}${!result.amount ? "- amount\n" : ""}
+  Please fix the errors in the previous response and return the updated transaction object`
+          });
+        }
+
+        if (!categories.includes(result.category)) {
+          history.push({
+            role: "assistant",
+            content: JSON.stringify(result)
+          });
+          history.push({
+            role: "user",
+            content: `The category ${result.category} is not a valid category. Please fix the errors in the previous response and return the updated transaction object\nNote: the valid categories are ${categories.join(", ")}`
+          });
+        }
+
+        if (!categoryObject[result.category].subCategories.includes(result.subCategory)) {
+          history.push({
+            role: "assistant",
+            content: JSON.stringify(result)
+          });
+          history.push({
+            role: "user",
+            content: `The subcategory ${result.subCategory} is not a valid subcategory for the category ${result.category}. Please fix the errors in the previous response and return the updated transaction object\nNote: the valid subcategories for the category ${result.category} are ${categoryObject[result.category].subCategories.join(", ")}`
+          });
+        }
+
+        return {
+          id: `TRNS${ulid()}`,
+          userPId: event.context.user.pId,
+          name: rowData[nameIndex],
+          category: result.category,
+          subCategory: result.subCategory,
+          isIncome: result.isIncome,
+          completedAt: new Date(result.completedAt),
+          amount: parseFloat(rowData[amountIndex]),
+          rawData: formattedRow
+        };
       }
-
-			console.log(result);
-			return {
-        name: rowData[nameIndex],
-        category: result.category,
-        subCategory: result.subCategory,
-        isIncome: result.isIncome,
-        completedAt: result.completedAt,
-        amount: parseFloat(rowData[amountIndex]),
-        rawData: formattedRow
-      };
 		})
 	);
 
-  const transactionsResults = promiseResults.filter(result => result !== null);
-	const transactionInput = [];
 
-	const failedTransactions = [];
+  const transactionsResults = promiseResults.filter(result => !!result);
 
-	for (const transResult of transactionsResults) {
-		const { name, category, subCategory, isIncome, completedAt, amount, rawData } = transResult;
-
-		const completedDate = new Date(completedAt);
-
-		if (!categories.includes(category)) {
-			failedTransactions.push(transResult);
-			continue;
-		}
-
-		if (!categoryObject[category].subCategories.includes(subCategory)) {
-			failedTransactions.push(transResult);
-			continue;
-		}
-
-		transactionInput.push({
-			id: `TRNS${ulid()}`,
-			name,
-			category,
-			subCategory,
-			amount,
-			isIncome,
-			completedAt: completedDate,
-      rawData,
-			userPId: event.context.user.pId
-		});
-	}
 
 	try {
 		const transaction = await prisma.transactions.createMany({
-			data: transactionInput,
+			data: transactionsResults,
 		});
+
 
 		return {
 			success: true,
 			transactions: {
 				count: transaction.count,
-				items: transactionInput
-			},
-			failedTransactions: {
-				count: failedTransactions.length,
-				items: failedTransactions
+				items: transactionsResults
 			}
 		};
 	} catch (error) {

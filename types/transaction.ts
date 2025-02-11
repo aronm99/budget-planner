@@ -7,6 +7,7 @@ export interface TransactionItem {
   isIncome: boolean;
   completedAt: Date;
   userPId: string;
+  rawData: string;
 }
 
 export interface StatementResponse {
@@ -14,17 +15,6 @@ export interface StatementResponse {
   transactions: {
     count: number;
     items: TransactionItem[];
-  };
-  failedTransactions: {
-    count: number;
-    items: Array<{
-      name: string;
-      category: string;
-      subCategory: string;
-      isIncome: boolean;
-      completedAt: string;
-      amount: number;
-    }>;
   };
 }
 

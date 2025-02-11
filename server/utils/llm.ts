@@ -35,6 +35,7 @@ export async function chatCompletion(prompt: string, systemPrompt?: string, hist
   });
 
   const result = await response.json();
+
   if (typeof result.choices[0].message.content === 'string' && jsonSchema) {
     return JSON.parse(result.choices[0].message.content);
   }

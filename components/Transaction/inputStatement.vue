@@ -20,9 +20,29 @@
         <v-file-input
           v-model="transactionFile"
           label="Upload Statement"
-          :loading="loading"          accept=".csv,.txt,.pdf"
+          :loading="loading"
+          accept=".csv"
           @change="handleFileChange"
         />
+      </v-row>
+      <v-row v-if="csvHeaders.length > 0">
+        <v-col>
+          <h4>Map CSV Headers</h4>
+          <v-row>
+            <v-col cols="12" v-for="standardHeader in standardHeaders" :key="standardHeader.value">
+              <div class="mb-2">{{ standardHeader.label }}</div>
+              <v-select
+                v-model="headerMapping[standardHeader.value]"
+                :items="csvHeaders"
+                label="Select matching column"
+                item-title="label"
+                item-value="value"
+                required
+                density="comfortable"
+              />
+            </v-col>
+          </v-row>
+        </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -69,10 +89,31 @@
   const transactionString = ref('');
   const loading = ref(false);
   const transactions = ref<TransactionItem[]>([]);
+  const csvHeaders = ref<{ label: string, value: number }[]>([]);
+  const headerMapping = ref<Record<string, number>>({});
+
+  const standardHeaders = [
+    { label: 'Transaction Date', value: 'date' },
+    { label: 'Description', value: 'description' },
+    { label: 'Amount', value: 'amount' },
+    { label: 'Type', value: 'transactionType' },
+    // Add any other required headers
+  ];
+
   const handleFileChange = async () => {
     if (!transactionFile.value) return;
     const fileContent = await transactionFile.value.text();
     transactionString.value = fileContent;
+    
+    // Parse CSV headers
+    const lines = fileContent.split('\n');
+    let index = 0;
+    let cells = lines[index].split(',');
+    while (cells.length <= 1) {
+      index++;
+      cells = lines[index].split(',');
+    }
+    csvHeaders.value.push(...lines[index].trim().split(',').map((header, index) => ({ label: header, value: index })));
   };
 
   const submitForm = async () => {
@@ -83,6 +124,7 @@
       body: {
         transactions: transactionString.value,
         statementType: statementType.value,
+        headerMapping: headerMapping.value,
       }
     });
     transactions.value = transactionsResult.transactions.items as TransactionItem[];
