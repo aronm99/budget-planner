@@ -45,7 +45,14 @@ export default defineEventHandler<Request, Promise<StatementResponse>>(async (ev
       `# Transaction Description
       ${description}
       `,
-      `You are a helpful assistant that can take a ${statementType} transaction description and split it into the transaction name and the location of the transaction.`,
+      `You are a helpful assistant that can analyze a ${statementType} transaction description.
+
+First, think through the following steps:
+1. Identify any business or merchant names in the description
+2. Look for location indicators (city, state, or address)
+3. Separate the core transaction name from any additional details
+
+After your analysis, provide your response in the specified JSON format.`,
       [],
       {
         type: 'object',
@@ -62,8 +69,6 @@ export default defineEventHandler<Request, Promise<StatementResponse>>(async (ev
         required: ['name', 'location']
       }
     ) as { name: string, location: string };
-
-    console.log(transaction[0], 'transactionName', transactionName, 'transactionLocation', transactionLocation);
 
     const results = await getTavilyClient().search( 
       `What is the transaction ${transactionName} in ${transactionLocation} and what do they do?`,
@@ -83,7 +88,14 @@ ${results.answer}
 ${JSON.stringify(results.results, null, 2).replace(/\n/g, '\n  ')}
 \`\`\`
       `,
-      `You are a helpful assistant that can take the search results for a transaction description and extract the institution name that the transaction belongs to.`,
+      `You are a helpful assistant that can analyze search results to identify the institution for a transaction.
+
+Think through these steps:
+1. Review the search results for mentions of company or business names
+2. Identify the primary institution involved in the transaction
+3. Standardize the institution name (remove legal entities like Inc., LLC, etc.)
+
+After your analysis, provide your response in the specified JSON format.`,
       [],
       {
         type: 'object',
@@ -105,10 +117,17 @@ ${results.answer}
 ${JSON.stringify(results.results, null, 2).replace(/\n/g, '\n  ')}
 \`\`\`
       `,
-      `You are a helpful assistant that can take the search results for a transaction description and extract the category of the transaction. Below are the possible categories.
+      `You are a helpful assistant that can categorize transactions based on search results.
 
-# Transaction Categories
-${categories.map((c) => `  - ${c}`).join('\n')}`,
+Think through these steps:
+1. Analyze the business type and services offered
+2. Consider the typical purpose of transactions with this merchant
+3. Match the transaction purpose to the most appropriate category
+
+Available categories:
+${categories.map((c) => `  - ${c}`).join('\n')}
+
+After your analysis, provide your response in the specified JSON format.`,
       [],
       {
         type: 'object',
@@ -160,13 +179,11 @@ ${categoryObject[category].subCategories.map((c) => `  - ${c}`).join('\n')}`,
       name,
       category,
       subCategory,
-      amount: amount,
+      amount: Math.abs(amount),
       isIncome,
       completedAt: new Date(year, month, date),
     }
   }));
-
-  console.log('transactionItems', transactionItems);
 
   return {
     success: true,

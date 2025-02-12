@@ -5,7 +5,7 @@ export interface TransactionItem {
   subCategory: string;
   amount: number;
   isIncome: boolean;
-  completedAt: Date;
+  completedAt: Date | string;
   userPId: string;
   rawData: string;
 }
