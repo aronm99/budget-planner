@@ -5,11 +5,6 @@
     >
       <v-list class="d-flex flex-column h-screen">
         <v-list-item
-          :prepend-icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-          @click="toggleRail"
-        />
-
-        <v-list-item
           link
           prepend-icon="mdi-home"
           title="Home"
@@ -29,6 +24,10 @@
         />
 
         <v-divider class="mt-auto"/>
+        <v-list-item
+          :prepend-icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+          @click="toggleRail"
+        />
         <v-list-item
           :link="rail"
         >
@@ -99,7 +98,9 @@
     </v-app-bar>
     
     <v-main>
-      <slot />
+      <v-sheet class="pa-4">
+        <slot />
+      </v-sheet>
     </v-main>
   </v-app>
 </template>
@@ -163,10 +164,5 @@ const menuItemClicked = async (item: string) => {
 };
 </script>
 <style scoped lang="scss">
- ::v-deep .v-application__wrap {
-    min-height: calc(100vh - 64px);
-    padding: 15px;
-
-  }
 </style>
 
