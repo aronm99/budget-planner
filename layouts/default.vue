@@ -32,11 +32,12 @@
         <v-list-item
           :link="rail"
         >
-          <v-list-item-icon v-if="rail" @click="onThemeButtonClick">
+          <template v-if="rail" v-slot:prepend>
             <v-icon
+              @click="onThemeButtonClick"
               :icon="themeVal === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
             />
-          </v-list-item-icon>
+          </template>
           <v-switch
             v-if="!rail"
             hide-details
@@ -67,28 +68,24 @@
               </template>
               <v-list>
                 <v-list-item @click="menuItemClicked('Profile')">
-                  <v-list-item-icon>
+                  <template v-slot:prepend>
                     <v-icon>mdi-account</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>Profile</v-list-item-title>
-                  </v-list-item-content>
+                  </template>
+                  <v-list-item-title>Profile</v-list-item-title>
                 </v-list-item>
+
                 <v-list-item @click="menuItemClicked('Settings')">
-                  <v-list-item-icon>
+                  <template v-slot:prepend>
                     <v-icon>mdi-cog</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>Settings</v-list-item-title>
-                  </v-list-item-content>
+                  </template>
+                  <v-list-item-title>Settings</v-list-item-title>
                 </v-list-item>
+
                 <v-list-item @click="menuItemClicked('Logout')">
-                  <v-list-item-icon>
+                  <template v-slot:prepend>
                     <v-icon>mdi-logout</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>Logout</v-list-item-title>
-                  </v-list-item-content>
+                  </template>
+                  <v-list-item-title>Logout</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -128,6 +125,21 @@ const onThemeButtonClick = () => {
 
 const toggleRail = () => rail.value = !rail.value;
 
+const route = useRoute();
+
+watchEffect(() => {
+  // Convert route path to title case, removing dashes and slashes
+  if (route.path === '/') {
+    PageTitle.value = 'Home';
+  } else {
+    PageTitle.value = route.path
+      .split('/')
+      .pop()! // Get last segment
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+});
 
 
 
@@ -149,6 +161,12 @@ const menuItemClicked = async (item: string) => {
       break;
   }
 };
-
 </script>
+<style scoped lang="scss">
+ ::v-deep .v-application__wrap {
+    min-height: calc(100vh - 64px);
+    padding: 15px;
+
+  }
+</style>
 

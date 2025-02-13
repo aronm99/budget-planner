@@ -1,7 +1,7 @@
 <template>
-  <v-form @submit.prevent="submitForm" v-if="!isSubmitted">
-    <v-container>
-      <v-row>
+    <v-form @submit.prevent="submitForm" v-if="!isSubmitted">
+      <v-container>
+        <v-row>
         <h3>Input Transactions From Bill or Statement</h3>
       </v-row>
       <v-row>
@@ -77,86 +77,126 @@
 
   <v-row v-if="transactions.length > 0">
     <v-col>
-      <v-table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Sub Category</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(transaction, index) in transactions" :key="transaction.id">
-            <td :class="{ 'modified-cell': isFieldModified(index, 'name') }">
-              <v-text-field
-                v-model="updatedTransactions[index].name"
-                density="compact"
-                variant="plain"
-                hide-details
+      <v-sheet
+        border
+        rounded
+        elevation="5"
+      >
+        <v-table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Sub Category</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th/>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(transaction, index) in transactions" :key="transaction.id">
+              <td :class="{ 'modified-cell': isFieldModified(index, 'name') }">
+                <v-text-field
+                  v-model="updatedTransactions[index].name"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                />
+              </td>
+              <td :class="{ 'modified-cell': isFieldModified(index, 'category') }">
+                <v-select
+                  v-model="updatedTransactions[index].category"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  :items="categories"
+                />
+              </td>
+              <td :class="{ 'modified-cell': isFieldModified(index, 'subCategory') }">
+                <v-select
+                  v-model="updatedTransactions[index].subCategory"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  :items="categoryObject[updatedTransactions[index].category].subCategories"
+                />
+              </td>
+              <td :class="{ 'danger-modified-cell': isFieldModified(index, 'amount') }">
+                <v-text-field
+                  v-model.number="updatedTransactions[index].amount"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  type="number"
+                  prefix="$"
+                />
+              </td>
+              <td :class="{ 'danger-modified-cell': isFieldModified(index, 'completedAt') }">
+                <v-text-field
+                  v-model="updatedTransactions[index].completedAt"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  type="date"
+                />
+              </td>
+              <td :class="{ 'danger-modified-cell': isFieldModified(index, 'isIncome') }">
+                <v-select
+                  v-model="updatedTransactions[index].isIncome"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  :items="[
+                    { title: 'Income', value: true },
+                    { title: 'Expense', value: false }
+                  ]"
+                  item-title="title"
+                  item-value="value"
+                />
+              </td>
+              <td>
+                <v-tooltip text="Reset Transaction">
+                  <template v-slot:activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      icon="mdi-refresh"
+                      variant="plain"
+                      size="x-small"
+                      @click="resetTransaction(index)"
+                    />
+                  </template>
+                </v-tooltip>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-sheet>
+      <v-row class="mt-6" justify="end">
+        <v-col cols="auto">
+          <v-tooltip text="Reset All Transactions">
+            <template v-slot:activator="{ props }">
+              <v-btn 
+                v-bind="props"
+                color="error" 
+                icon="mdi-refresh"
+                variant="tonal"
+                :disabled="Object.keys(updatedTransactions).length === 0"
+                size="small"
+                height="40"
+                rounded="lg"
+                @click="resetTransactions"
               />
-            </td>
-            <td :class="{ 'modified-cell': isFieldModified(index, 'category') }">
-              <v-select
-                v-model="updatedTransactions[index].category"
-                density="compact"
-                variant="plain"
-                hide-details
-                :items="categories"
-              />
-            </td>
-            <td :class="{ 'modified-cell': isFieldModified(index, 'subCategory') }">
-              <v-select
-                v-model="updatedTransactions[index].subCategory"
-                density="compact"
-                variant="plain"
-                hide-details
-                :items="categoryObject[updatedTransactions[index].category].subCategories"
-              />
-            </td>
-            <td :class="{ 'danger-modified-cell': isFieldModified(index, 'amount') }">
-              <v-text-field
-                v-model.number="updatedTransactions[index].amount"
-                density="compact"
-                variant="plain"
-                hide-details
-                type="number"
-                prefix="$"
-              />
-            </td>
-            <td :class="{ 'danger-modified-cell': isFieldModified(index, 'completedAt') }">
-              <v-text-field
-                v-model="updatedTransactions[index].completedAt"
-                density="compact"
-                variant="plain"
-                hide-details
-                type="date"
-              />
-            </td>
-            <td :class="{ 'danger-modified-cell': isFieldModified(index, 'isIncome') }">
-              <v-select
-                v-model="updatedTransactions[index].isIncome"
-                density="compact"
-                variant="plain"
-                hide-details
-                :items="[
-                  { title: 'Income', value: true },
-                  { title: 'Expense', value: false }
-                ]"
-                item-title="title"
-                item-value="value"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-      <v-row class="mt-4">
-        <v-col>
+            </template>
+          </v-tooltip>
+        </v-col>
+        <v-col cols="auto">
           <v-btn 
             color="primary" 
             :disabled="Object.keys(updatedTransactions).length === 0"
+            size="small"
+            height="40"
+            rounded="lg"
             @click="saveChanges"
           >
             Save Changes
@@ -172,7 +212,6 @@
 
   import type { StatementResponse, TransactionItem } from '~/types/transaction';
   import { categories, categoryObject } from '~/lib/categories';
-import { isEqual } from 'lodash';
 
   const statementType = ref<'credit-card' | 'bank'>('credit-card');
   const transactionFile = ref<File | null>(null);
@@ -278,16 +317,28 @@ import { isEqual } from 'lodash';
       // Handle error appropriately
     }
   };
+
+  const resetTransaction = (index: number) => {
+    updatedTransactions.value[index] = {
+      ...transactions.value[index],
+      completedAt: transactions.value[index].completedAt.toString().split('T')[0],
+    }
+  }
+  const resetTransactions = () => {
+    updatedTransactions.value = transactions.value.map((transaction) => ({
+      ...transaction,
+      completedAt: transaction.completedAt.toString().split('T')[0],
+    }));
+  }
 </script>
 
 <style scoped>
-:deep(.v-field) {
-  border-radius: 0;
-  padding: 0;
+:deep(td) {
+  padding: 2px 5px;
 }
+
 :deep(.v-text-field input) {
   min-height: 0;
-  padding: 4px 8px;
 }
 
 .modified-cell {
