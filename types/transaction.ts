@@ -6,7 +6,7 @@ export interface TransactionItem {
   amount: number;
   isIncome: boolean;
   completedAt: Date | string;
-  userPId: string;
+  userPId: number;
   rawData: string;
 }
 

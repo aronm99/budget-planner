@@ -164,6 +164,27 @@
                 />
               </td>
               <td>
+                <v-tooltip :text="transaction.rawData">
+                  <template v-slot:activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      icon="mdi-information"
+                      variant="plain"
+                      size="x-small"
+                    />
+                  </template>
+                </v-tooltip>
+                <v-tooltip text="Delete Transaction">
+                  <template v-slot:activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      icon="mdi-delete"
+                      variant="plain"
+                      size="x-small"
+                      @click="deleteTransaction(index)"
+                    />
+                  </template>
+                </v-tooltip>
                 <v-tooltip text="Reset Transaction">
                   <template v-slot:activator="{ props }">
                     <v-btn
@@ -216,7 +237,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue';
+  import { ref } from 'vue';
+  import { reduce, isEqual } from 'lodash';
 
   import type { StatementResponse, TransactionItem } from '~/types/transaction';
   import { categories, categoryObject } from '~/lib/categories';
@@ -224,30 +246,7 @@
   const statementType = ref<'credit-card' | 'bank'>('credit-card');
   const transactionFile = ref<File | null>(null);
   const transactionFileContent = ref<string[][]>([]);
-  const transactions = ref<TransactionItem[]>([
-			// {
-			// 	"id": "TRANS-01JKW6CZTR7S3BNCRC19ZZCM5P",
-			// 	"userPId": "8t3nxikgmhnn5w1",
-			// 	"rawData": "1,'5191230206476583',20250113,20250114,48.34,PIONEER # 345 MARKHAM ON",
-			// 	"name": "Pioneer Money Transfer Inc., Markham, Ontario",
-			// 	"category": "Savings",
-			// 	"subCategory": "Other savings goals (e.g., vacation fund, education fund)",
-			// 	"amount": 48.34,
-			// 	"isIncome": false,
-			// 	"completedAt": "2025-01-13T05:00:00.000Z"
-			// },
-			// {
-			// 	"id": "TRANS-01JKW6CZTR9DV5XM62GTRDA54D",
-			// 	"userPId": "8t3nxikgmhnn5w1",
-			// 	"rawData": "2,'5191230206476583',20250114,20250115,-25.0,Cashback/Remises CR",
-			// 	"name": "ELI5: What is cashback and how does it work? : r/explainlikeimfive - Reddit",
-			// 	"category": "Debt Payments",
-			// 	"subCategory": "Credit card payments",
-			// 	"amount": 25,
-			// 	"isIncome": true,
-			// 	"completedAt": "2025-01-14T05:00:00.000Z"
-			// }
-		]);
+  const transactions = ref<TransactionItem[]>([]);
   const csvHeaders = ref<{ label: string, value: number }[]>([]);
   const headerMapping = ref<Record<string, number>>({});
   const isSubmitted = ref(false);
@@ -317,23 +316,35 @@
 
   const saveChanges = async () => {
     try {
-      const updates = Object.entries(updatedTransactions.value).map(([index, changes]) => ({
-        ...changes,
-        id: transactions.value[Number(index)].id,
-      }));
+      const updates = reduce(updatedTransactions.value, (acc, transaction, index) => {
+        if (!isEqual(transaction, transactions.value[Number(index)])) {
+          acc.push({
+            ...transaction,
+            completedAt: new Date(transaction.completedAt)
+          });
+        }
+        return acc;
+      }, [] as TransactionItem[]);
 
-      await $fetch('api/transaction/bulk-update', {
-        method: 'PATCH',
-        body: { transactions: updates }
+      const deletedTransactionIds = transactions.value.filter((_, index) => !updatedTransactions.value[index]).map((transaction) => transaction.id);
+
+      await $fetch('api/transaction/statementUpdate', {
+        method: 'POST',
+        body: { updates, deletedTransactionIds }
       });
 
       // Clear the updates after successful save
       updatedTransactions.value = {};
+      navigateTo('/');
     } catch (error) {
       console.error('Failed to save changes:', error);
       // Handle error appropriately
     }
   };
+
+  const deleteTransaction = (index: number) => {
+    delete updatedTransactions.value[index];
+  }
 
   const resetTransaction = (index: number) => {
     updatedTransactions.value[index] = {

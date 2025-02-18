@@ -34,7 +34,8 @@ export default defineNuxtConfig({
     openAiApiKey: "",
     jinaAiApiKey: "",
     tavilyApiKey: "",
-    model: "",
+    reasonModel: "",
+    genModel: "",
   },
 
   devtools: { enabled: true },

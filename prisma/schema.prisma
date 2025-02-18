@@ -59,3 +59,25 @@ model UserKey {
   @@index([user_id])
   @@map("user_key")
 }
+
+model SearchResults {
+  pId Int @id @default(autoincrement())
+  hash String @unique
+  searchQuery String
+  searchResults Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LLMCache {
+  pId Int @id @default(autoincrement())
+  hash String @unique
+  systemPrompt String?
+  prompt String
+  history Json?
+  jsonSchema Json?
+  response Json
+  model String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
